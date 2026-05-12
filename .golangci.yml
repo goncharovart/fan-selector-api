@@ -3,6 +3,10 @@ version: "2"
 run:
   timeout: 3m
   tests: true
+  # Override go directive from go.mod (which gets bumped to 1.25 by
+  # testcontainers transitives). golangci-lint v2.2 ships built with Go 1.24,
+  # so anything higher trips its "can't load config" guard.
+  go: "1.24"
 
 linters:
   default: none
