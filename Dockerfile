@@ -18,11 +18,17 @@ RUN go build \
     -o /out/server \
     ./cmd/server
 
+RUN go build \
+    -ldflags="-s -w" \
+    -o /out/migrate \
+    ./cmd/migrate
+
 # ---- runtime stage -------------------------------------------------------
 # Distroless ships with no shell, no package manager — minimal attack surface.
 FROM gcr.io/distroless/static-debian12:nonroot
 WORKDIR /app
 COPY --from=build /out/server /app/server
+COPY --from=build /out/migrate /app/migrate
 
 USER nonroot:nonroot
 EXPOSE 8080
