@@ -27,13 +27,15 @@ and that's the part where I think I can actually help you.
 - Production Go. My primary stack is TypeScript/Node. To close the gap I
   built a real Go service in this same spec-driven style:
   [github.com/goncharovart/fan-selector-api](https://github.com/goncharovart/fan-selector-api).
-  Cloud Run, Cloud SQL, OTel traces, distroless image, GitHub Actions CI,
-  spec docs in `/specs`. It extracts Wentmarket's fan-matching engine into
-  a clean Go microservice — small project, but every layer of what your
-  posting asks for is there to look at and pick apart.
-- GKE specifically. I've used Cloud Run on managed Kubernetes; Compute
-  Engine for self-hosted. The primitives are the same — pods, services,
-  configmaps, secrets — I just haven't operated GKE in production.
+  Distroless image, embedded SQL migrations, OTel traces, GitHub Actions CI,
+  spec docs in `/specs`. Deployment configs for both Cloud Run and Fly.io
+  are committed (`cloudbuild.yaml`, `fly.toml`) — ready to ship the moment a
+  billing account is attached. Locally it runs end-to-end via
+  `docker compose up -d && go run ./cmd/server`.
+- Hands-on GCP/GKE production. I've written GCP deploy configs and read the
+  docs end-to-end, but haven't operated a cluster in prod. The primitives
+  (containers, secrets, IAM, managed Postgres/Redis) are familiar from
+  self-hosted setups; the muscle memory will come fastest by doing.
 
 **Why this role:**
 

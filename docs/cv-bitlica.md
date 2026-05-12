@@ -69,8 +69,9 @@ later became the seed for Wentmarket's engineering engines.
 [github.com/goncharovart/fan-selector-api](https://github.com/goncharovart/fan-selector-api)
 
 A standalone Go microservice that extracts Wentmarket's fan-matching engine
-into a clean, testable service. Built spec-first (BMad-style) on Cloud Run.
-**Purpose:** demonstrate Go + GCP + SDD workflow on a domain I know cold.
+into a clean, testable service. Built spec-first (BMad-style).
+**Purpose:** demonstrate Go + cloud-deployable architecture + SDD workflow on a
+domain I know cold.
 
 - **Go 1.23**, chi router, pgx/v5, go-redis/v9, OpenTelemetry, slog.
 - **Postgres 16** with GiST range index on the fan duty-point envelope;
@@ -81,15 +82,19 @@ into a clean, testable service. Built spec-first (BMad-style) on Cloud Run.
 - **Redis cache** with deterministic SHA-256 keys, TTL jitter (±10%) to
   prevent stampedes, graceful degradation to a NopCache when Redis is down.
 - **Distroless multi-stage Docker image**, non-root user.
-- **Cloud Build → Artifact Registry → Cloud Run** one-command deploy
-  via `cloudbuild.yaml`; secrets via Secret Manager; Postgres via Cloud SQL
-  Unix socket.
+- **Two deployment paths in repo** — `cloudbuild.yaml` for GCP Cloud Run
+  (Artifact Registry + Cloud SQL + Secret Manager) and `fly.toml` for
+  Fly.io; both fully written, ready to `apply` once a billing account is
+  attached.
+- **Embedded SQL migrations** — `cmd/migrate` ships in the same distroless
+  image as the server, applies migrations on every release via Fly's
+  `release_command` or Cloud Run's pre-start hook.
 - **GitHub Actions CI:** `go vet`, `go test -race`, golangci-lint, image build.
 - **SDD artifacts:** PRD, architecture, per-story acceptance criteria
   ([specs/](https://github.com/goncharovart/fan-selector-api/tree/main/specs))
   written before implementation. Each story closes with a self-contained PR.
 
-Live endpoint: `https://fan-selector-...run.app/v1/match?q=3000&p=300`
+Runs locally via `docker compose up -d && go run ./cmd/server`.
 
 ---
 
@@ -98,9 +103,11 @@ Live endpoint: `https://fan-selector-...run.app/v1/match?q=3000&p=300`
 **Backend.** TypeScript/Node, Go (ramping), PostgreSQL, Redis, BullMQ, REST,
 OpenAPI, OpenTelemetry, structured logging, idempotency, observability.
 
-**Cloud / DevOps.** GCP Cloud Run, Cloud SQL, Cloud Build, Secret Manager,
-Artifact Registry; Docker (multi-stage, distroless); GitHub Actions CI/CD;
-Linux/systemd; nginx; custom Bash deploy pipelines.
+**Cloud / DevOps.** Docker (multi-stage, distroless); GitHub Actions CI/CD;
+Linux/systemd; nginx; custom Bash deploy pipelines (`tar | ssh | build-on-server`).
+Deployment configs written for GCP Cloud Run (Cloud Build / Cloud SQL /
+Secret Manager) and Fly.io; familiarity at the config-and-docs level, not yet
+hands-on production.
 
 **AI-assisted workflow.** Spec-driven development (BMad-Method, custom spec
 templates), Claude Code as primary IDE companion, subagent parallelization for

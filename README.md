@@ -117,11 +117,15 @@ go test -tags=integration ./...
 
 ## Deployment
 
-See `deploy/README.md`. TL;DR — one-command deploy:
+Two paths are committed to the repo; pick whichever you have billing for.
 
-```bash
-gcloud builds submit --config=cloudbuild.yaml
-```
+- **GCP Cloud Run** — see [`deploy/README.md`](deploy/README.md).
+  `gcloud builds submit --config=cloudbuild.yaml --substitutions=_DB_INSTANCE=...`
+- **Fly.io** — see [`deploy/fly.md`](deploy/fly.md).
+  `flyctl deploy --remote-only`
+
+Both options use the same Dockerfile and the same embedded-migration runner
+(`cmd/migrate`), so the binary is portable across managed-container hosts.
 
 ## License
 
