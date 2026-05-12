@@ -6,5 +6,7 @@ package migrations
 
 import "embed"
 
+// FS is the embedded filesystem holding every .sql migration in this directory.
+//
 //go:embed *.sql
 var FS embed.FS
