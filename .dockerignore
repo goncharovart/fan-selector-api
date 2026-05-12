@@ -1,0 +1,15 @@
+# Keep the build context small.
+.git
+.github
+specs
+deploy
+docs
+*.md
+!README.md
+.vscode
+.idea
+bin
+.cache
+*.test
+*.out
+docker-compose*.yml

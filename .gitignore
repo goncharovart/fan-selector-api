@@ -1,0 +1,23 @@
+# Binaries
+bin/
+*.exe
+*.test
+*.out
+
+# Go build cache
+.cache/
+
+# Local env
+.env
+.env.local
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Cloud Build cache
+.gcloudignore.bak
