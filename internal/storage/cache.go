@@ -8,7 +8,11 @@ import (
 	"time"
 
 	"github.com/redis/go-redis/v9"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/attribute"
 )
+
+var cacheTracer = otel.Tracer("fan-selector-api/cache")
 
 // Cache is the small surface the API needs from any caching layer.
 // Both the real Redis client and the NopCache satisfy it.
@@ -54,20 +58,35 @@ func NewRedis(ctx context.Context, dsn string) (Cache, error) {
 }
 
 func (r *RedisCache) Get(ctx context.Context, key string) ([]byte, bool, error) {
+	ctx, span := cacheTracer.Start(ctx, "cache.get")
+	defer span.End()
+
 	val, err := r.client.Get(ctx, key).Bytes()
 	if errors.Is(err, redis.Nil) {
+		span.SetAttributes(attribute.Bool("cache.hit", false))
 		return nil, false, nil
 	}
 	if err != nil {
 		return nil, false, fmt.Errorf("cache: get: %w", err)
 	}
+	span.SetAttributes(
+		attribute.Bool("cache.hit", true),
+		attribute.Int("cache.value_bytes", len(val)),
+	)
 	return val, true, nil
 }
 
 // Set applies jitter to the TTL so cache entries inserted in the same burst
 // don't all expire at the same instant.
 func (r *RedisCache) Set(ctx context.Context, key string, value []byte, ttl time.Duration) error {
+	ctx, span := cacheTracer.Start(ctx, "cache.set")
+	defer span.End()
+
 	jittered := r.applyJitter(ttl)
+	span.SetAttributes(
+		attribute.Int("cache.value_bytes", len(value)),
+		attribute.Int64("cache.ttl_ms", jittered.Milliseconds()),
+	)
 	if err := r.client.Set(ctx, key, value, jittered).Err(); err != nil {
 		return fmt.Errorf("cache: set: %w", err)
 	}

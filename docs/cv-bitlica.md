@@ -78,7 +78,9 @@ domain I know cold.
   prefilter narrows from full catalog to candidates in a single indexed scan.
 - **Bisection root finder** for `P_fan(Q) = P_target` with input
   defenses (NaN/Inf, sign-change check, boundary hits, monotone-decreasing
-  curve assumption documented).
+  curve assumption documented). Benchmarked: 0.65 ns Horner eval,
+  53 ns bisection, 3.7 µs for a 50-candidate Evaluate pass — 99 ms of headroom
+  inside the 100 ms p95 target.
 - **Redis cache** with deterministic SHA-256 keys, TTL jitter (±10%) to
   prevent stampedes, graceful degradation to a NopCache when Redis is down.
 - **Distroless multi-stage Docker image**, non-root user.
@@ -89,7 +91,15 @@ domain I know cold.
 - **Embedded SQL migrations** — `cmd/migrate` ships in the same distroless
   image as the server, applies migrations on every release via Fly's
   `release_command` or Cloud Run's pre-start hook.
-- **GitHub Actions CI:** `go vet`, `go test -race`, golangci-lint, image build.
+- **OpenTelemetry tracing** with manual spans across `cache.get`/`cache.set`,
+  `storage.candidates`, `match.evaluate`; per-span attributes for cache hit,
+  candidate counts, value bytes, TTL. Exporter ships to any OTLP collector.
+- **Integration tests** via testcontainers-go: every CI run boots a real
+  Postgres 16 container, applies embedded migrations, asserts the GiST range
+  prefilter narrows the catalog correctly. Unit + integration + benchmark
+  jobs run in parallel.
+- **GitHub Actions CI:** `go vet`, `go test -race`, golangci-lint,
+  integration suite, benchmark report, image build.
 - **SDD artifacts:** PRD, architecture, per-story acceptance criteria
   ([specs/](https://github.com/goncharovart/fan-selector-api/tree/main/specs))
   written before implementation. Each story closes with a self-contained PR.

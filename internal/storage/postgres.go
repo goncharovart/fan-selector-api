@@ -9,9 +9,13 @@ import (
 	"fmt"
 
 	"github.com/jackc/pgx/v5/pgxpool"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/attribute"
 
 	"github.com/goncharovart/fan-selector-api/internal/matching"
 )
+
+var tracer = otel.Tracer("fan-selector-api/storage")
 
 // Store wraps a pgx connection pool and exposes the queries the API needs.
 // Construct it with New; close it with Close.
@@ -64,6 +68,13 @@ func (s *Store) Ping(ctx context.Context) error {
 // The range comparison is done with numrange containment so it can use the
 // GiST index; results are stable-ordered by id to keep tests deterministic.
 func (s *Store) Candidates(ctx context.Context, qTarget float64, maxN int) ([]matching.FanCandidate, error) {
+	ctx, span := tracer.Start(ctx, "storage.candidates")
+	span.SetAttributes(
+		attribute.Float64("storage.q_target", qTarget),
+		attribute.Int("storage.max_n", maxN),
+	)
+	defer span.End()
+
 	const query = `
 		SELECT m.id,
 		       trim(both ' ' from (m.series || ' ' || m.size)) AS label,
@@ -106,6 +117,7 @@ func (s *Store) Candidates(ctx context.Context, qTarget float64, maxN int) ([]ma
 	if err := rows.Err(); err != nil {
 		return nil, fmt.Errorf("storage: iter candidates: %w", err)
 	}
+	span.SetAttributes(attribute.Int("storage.candidates_found", len(out)))
 	return out, nil
 }
 

@@ -7,7 +7,12 @@ import (
 	"fmt"
 	"math"
 	"sort"
+
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/attribute"
 )
+
+var tracer = otel.Tracer("fan-selector-api/matching")
 
 // FanCandidate is a row coming back from the prefilter query.
 // It contains everything the engine needs to evaluate one fan.
@@ -61,7 +66,21 @@ func (r MatchRequest) CacheKey() string {
 // (well under 100 after the DB prefilter) and per-candidate work is a handful
 // of Horner evaluations plus bisection — fan-out would add scheduling cost
 // without measurable wins. If the catalog ever grows past 10K we can revisit.
-func Evaluate(_ context.Context, req MatchRequest, candidates []FanCandidate) []Match {
+func Evaluate(ctx context.Context, req MatchRequest, candidates []FanCandidate) []Match {
+	ctx, span := tracer.Start(ctx, "match.evaluate",
+		// trace.WithSpanKind defaults to internal — fine for CPU-bound work.
+	)
+	span.SetAttributes(
+		attribute.Float64("match.q_target", req.QTargetM3h),
+		attribute.Float64("match.p_target", req.PTargetPa),
+		attribute.Float64("match.tolerance", req.Tolerance),
+		attribute.Int("match.limit", req.Limit),
+		attribute.Int("match.candidates_in", len(candidates)),
+	)
+	defer span.End()
+
+	_ = ctx // engine itself doesn't fan out; ctx kept for parity with other layers.
+
 	results := make([]Match, 0, len(candidates))
 
 	for _, c := range candidates {
@@ -113,5 +132,6 @@ func Evaluate(_ context.Context, req MatchRequest, candidates []FanCandidate) []
 	if len(results) > req.Limit {
 		results = results[:req.Limit]
 	}
+	span.SetAttributes(attribute.Int("match.candidates_out", len(results)))
 	return results
 }
