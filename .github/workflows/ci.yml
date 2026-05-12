@@ -78,6 +78,9 @@ jobs:
       - uses: golangci/golangci-lint-action@v7
         with:
           version: v2.2
+          # Build lint from source with the runner's Go (1.25) so it can
+          # parse deps that bumped to go 1.25; prebuilt binaries are stuck on 1.24.
+          install-mode: goinstall
 
   build-image:
     name: build image
