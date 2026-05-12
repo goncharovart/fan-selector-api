@@ -27,10 +27,17 @@ type Cache interface {
 // of the system can be wired up identically with or without Redis configured.
 type NopCache struct{}
 
-func (NopCache) Get(context.Context, string) ([]byte, bool, error)              { return nil, false, nil }
-func (NopCache) Set(context.Context, string, []byte, time.Duration) error       { return nil }
-func (NopCache) Ping(context.Context) error                                     { return nil }
-func (NopCache) Close() error                                                   { return nil }
+// Get always reports a miss.
+func (NopCache) Get(context.Context, string) ([]byte, bool, error) { return nil, false, nil }
+
+// Set discards the value.
+func (NopCache) Set(context.Context, string, []byte, time.Duration) error { return nil }
+
+// Ping always succeeds.
+func (NopCache) Ping(context.Context) error { return nil }
+
+// Close is a no-op.
+func (NopCache) Close() error { return nil }
 
 // RedisCache wraps a go-redis client and adds TTL jitter.
 type RedisCache struct {
@@ -57,6 +64,7 @@ func NewRedis(ctx context.Context, dsn string) (Cache, error) {
 	return &RedisCache{client: client, jitter: 0.10}, nil
 }
 
+// Get retrieves a cached value. The second return reports whether the key was found.
 func (r *RedisCache) Get(ctx context.Context, key string) ([]byte, bool, error) {
 	ctx, span := cacheTracer.Start(ctx, "cache.get")
 	defer span.End()
@@ -93,10 +101,12 @@ func (r *RedisCache) Set(ctx context.Context, key string, value []byte, ttl time
 	return nil
 }
 
+// Ping verifies the Redis connection is responsive.
 func (r *RedisCache) Ping(ctx context.Context) error {
 	return r.client.Ping(ctx).Err()
 }
 
+// Close releases the underlying Redis client.
 func (r *RedisCache) Close() error {
 	return r.client.Close()
 }

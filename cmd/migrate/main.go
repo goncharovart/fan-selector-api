@@ -53,7 +53,7 @@ func run() error {
 	if err != nil {
 		return fmt.Errorf("connect: %w", err)
 	}
-	defer conn.Close(ctx)
+	defer func() { _ = conn.Close(ctx) }()
 
 	if err := ensureMigrationsTable(ctx, conn); err != nil {
 		return fmt.Errorf("ensure table: %w", err)

@@ -57,7 +57,7 @@ func run() error {
 		// would surprise the operator. Leave REDIS_URL empty to disable.
 		return err
 	}
-	defer cache.Close()
+	defer func() { _ = cache.Close() }()
 
 	handler := api.NewHandler(store, store, cache, logger, cfg.CacheTTL, cfg.MaxCandidatesPerQuery)
 	server := &http.Server{
