@@ -1,54 +1,30 @@
 # Cover letter — Bitlica · Backend Vibe Engineer (Golang)
 
-Hi Bitlica team,
+Привет, команда Bitlica.
 
-I'm applying for the Backend Vibe Engineer (Golang) role.
+Подаюсь на позицию Backend Vibe Engineer (Golang). Хочу прямо обозначить, по чему совпадаем, а где у меня ramp — потому что в названии стоит «Vibe», и именно эта часть, кажется, и есть где я могу быть полезен.
 
-I want to be straightforward about the fit, because the title says "Vibe"
-and that's the part where I think I can actually help you.
+**Что приношу:**
 
-**What I bring:**
+- Два года production-бэкенда на Wentmarket ([wentmarket.ru](https://wentmarket.ru)) — B2B HVAC-платформа, которую я собрал end-to-end с Claude Code. 17 000+ полиномиальных кривых вентиляторов в Postgres, подбор по рабочей точке за p95 < 100 мс, реальные платежи через Yookassa, реальные заказы через CDEK. Order pipeline, soft-delete, идемпотентные платежи, headless Bitrix24, sync с 1С — всё в продакшне.
+- Рабочий spec-first процесс с AI-coding агентами. PRD → architecture → per-story acceptance criteria → код → тесты → деплой. Не «дайте Cursor доавтокомплитнуть», а настоящий цикл, где спека гейтит реализацию, а AI — мультипликатор продуктивности на каждом этапе. BMad-style.
+- Шесть лет HVAC-инжиниринга до веба — пригождается, когда домен технический (а в бэкенде он часто такой).
 
-- Two years of production backend work on Wentmarket
-  ([wentmarket.ru](https://wentmarket.ru)), a B2B HVAC platform I built
-  end-to-end with Claude Code. 17 000+ polynomial fan curves in Postgres,
-  sub-100ms duty-point matching, real money flowing through Yookassa,
-  real orders shipping through CDEK. Order pipeline, soft-delete, idempotent
-  payments, headless Bitrix24, 1C sync — all production, all running.
-- A working spec-first workflow with AI coding agents. PRD → architecture →
-  per-story acceptance criteria → code → tests → deploy. Not "ask Cursor to
-  autocomplete," but a real loop where the spec gates the implementation
-  and the AI is the productivity multiplier through every stage. BMad-style.
-- Six years of HVAC engineering before the web stack — useful when the
-  domain is technical (which a lot of backend work is).
+**Чего пока нет:**
 
-**What I don't bring (yet):**
+- Production-Go. Primary stack — TypeScript/Node. Чтобы закрыть гэп, собрал реальный Go-сервис в том же spec-driven стиле: [github.com/goncharovart/fan-selector-api](https://github.com/goncharovart/fan-selector-api). Distroless образ, embedded SQL-миграции, OTel traces, integration-тесты на testcontainers-go, GitHub Actions CI, спеки в `/specs`. Бенчмарки: Horner-eval 0.65 нс, bisection 53 нс, полный Evaluate 50 кандидатов 3.7 мкс — у p95-бюджета 100 мс остаётся 99 мс запаса. Это вынос движка подбора из Wentmarket в чистый микросервис — маленький проект, но каждый слой того, что вы перечислили в вакансии, реально лежит в репо и его можно поковырять.
+- Хендс-он GKE специально. Cloud Run в managed-конфигурации трогал, Compute Engine для self-hosted — конечно. Примитивы (поды, сервисы, configmaps, секреты) у меня в голове из self-hosted сетапов; продакшн-операции GKE нагоню быстрее всего в деле.
 
-- Production Go. My primary stack is TypeScript/Node. To close the gap I
-  built a real Go service in this same spec-driven style:
-  [github.com/goncharovart/fan-selector-api](https://github.com/goncharovart/fan-selector-api).
-  Distroless image, embedded SQL migrations, OTel traces, GitHub Actions CI,
-  spec docs in `/specs`. Deployment configs for both Cloud Run and Fly.io
-  are committed (`cloudbuild.yaml`, `fly.toml`) — ready to ship the moment a
-  billing account is attached. Locally it runs end-to-end via
-  `docker compose up -d && go run ./cmd/server`.
-- Hands-on GCP/GKE production. I've written GCP deploy configs and read the
-  docs end-to-end, but haven't operated a cluster in prod. The primitives
-  (containers, secrets, IAM, managed Postgres/Redis) are familiar from
-  self-hosted setups; the muscle memory will come fastest by doing.
+**Бонус — связанный Python pet:** [github.com/goncharovart/fan-curve-fitter](https://github.com/goncharovart/fan-curve-fitter). CLI на Typer + numpy + pydantic, который фитит полиномы из CSV-замеров и отдаёт JSON прямо в формате `fan-selector-api`. Получился маленький end-to-end pipeline: лабораторные данные → Python → JSON → Go-сервис. Horner-эвалюация в Python и Go синхронизирована, чтобы numerical output совпадал.
 
-**Why this role:**
+**Почему эта роль:**
 
-"Vibe Engineer" is the right name for what I already do. Most of the
-"experienced senior" backend candidates you'll see have never shipped real
-production with AI agents in the loop. I have. The Wentmarket repo is the
-artifact; the fan-selector-api repo is the proof I can do it in your stack.
+«Vibe Engineer» — это и есть то, что я уже делаю. Большая часть «опытных senior»-кандидатов, которые к вам придут, никогда не отгружали реальный продакшн с AI-агентами в loop'е. У меня это получилось. Wentmarket — артефакт; fan-selector-api + fan-curve-fitter — доказательство того, что повторю это на вашем стеке.
 
-I'd value a 30-minute call to go through both repos with you and to learn
-what Bitlica's "AI-native workflow" looks like in practice.
+Был бы рад 30-минутному звонку, чтобы пройти по обоим репам с вами и узнать, как «AI-native workflow» Bitlica устроен на практике.
 
-Open to relocation (Poland / Georgia / Belarus / other). Available immediately.
+Открыт к релокации (Польша / Грузия / Беларусь / другое). Готов начать сразу.
 
-Thanks for reading,
-Artur Goncharov
+Спасибо, что прочитали,
+Артур Гончаров
 [@gonartur](https://t.me/gonartur) · +7 (995) 376-31-73
