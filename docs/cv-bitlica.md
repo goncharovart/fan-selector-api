@@ -1,108 +1,58 @@
 # Артур Гончаров
 
-**Backend / Full-stack инженер · HVAC-инженер**
-
-Telegram: [@gonartur](https://t.me/gonartur) · Телефон: +7 (995) 376-31-73 · Email: goncharov.artur.02@gmail.com
-
-Главный проект: [wentmarket.ru](https://wentmarket.ru) · Pet: [github.com/goncharovart/fan-selector-api](https://github.com/goncharovart/fan-selector-api) · [github.com/goncharovart/fan-curve-fitter](https://github.com/goncharovart/fan-curve-fitter)
+Telegram @gonartur · +7 995 376 31 73 · goncharov.artur.02@gmail.com
+wentmarket.ru · github.com/goncharovart
 
 ---
 
-## Кратко
+Шесть лет проектировал вентиляцию для промышленных и коммерческих объектов, последние два года пишу веб. Сейчас параллельно тяну собственный проект на Next.js и набираюсь Go через side-сервис. Работаю в паре с Claude Code на всех стадиях, от первой страницы спеки до деплоя.
 
-Backend-leaning full-stack разработчик с **6 годами в HVAC-инжиниринге** и ~2 годами production-веба. Работаю spec-first с AI-агентами (Claude Code, Cursor) на всех стадиях — от PRD до деплоя. Ниша — домены, где алгоритм значит столько же, сколько и инфраструктура: подбор вентилятора по рабочей точке, расчёт потерь давления в воздуховодах, акустика, life-cycle cost.
-
-Primary stack — TypeScript/Node; сейчас наращиваю Go через реальный side-проект, чтобы расширить backend-инструментарий.
+Открыт к переезду в Польшу, Грузию, Беларусь или ещё куда удобно. Готов начинать в ближайшее время.
 
 ---
 
-## Опыт
+### Wentmarket · founder & lead engineer · 2024 — настоящее
 
-### Wentmarket — основатель / lead engineer · 2024 — наст. время
-B2B-платформа для HVAC-инженеров. В продакшне на [wentmarket.ru](https://wentmarket.ru). Собрана соло, AI-assisted (Claude Code). Реальные пользователи, заказы, платежи.
+[wentmarket.ru](https://wentmarket.ru) — B2B-платформа для подбора вентиляторов под рабочую точку. Делал в одиночку, сейчас работает в продакшене, через неё проходят реальные заказы и платежи.
 
-- **Движок подбора вентиляторов.** 17 000+ полиномиальных кривых в PostgreSQL с GiST range-фильтрацией; на каждый запрос решается `P_fan(Q) = P_target`, отдаются ранжированные результаты за p95 < 100 ms.
-- **Pipeline заказов.** Server actions + BullMQ воркеры + Redis L2 кеш. Интеграция Yookassa с детерминированными SHA-256 idempotency-ключами и 54-ФЗ чеками. Валидация вебхуков через API-call (а не HMAC), чтобы защититься от replay.
-- **Интеграция CDEK.** Service-слой на 871 строк: OAuth refresh на 401, exponential backoff (3 попытки, max 8 c), 30 c timeout, полный flow заказ/курьер/отслеживание/накладная.
-- **Soft-delete** через Prisma `$extends` на 8 моделях с согласованной фильтрацией всех запросов.
-- **Headless Bitrix24** — грузит вендорский виджет, скрывает его UI через инжектируемый CSS + MutationObserver, экспонирует `window.openB24Chat()` для собственных триггеров. Без двух конкурирующих чат-кнопок.
-- **Sync с 1С** через CommerceML XML; pipeline товаров/цен/остатков.
-- **Meilisearch** с graceful fallback на Prisma `LIKE` при недоступности индексатора — одна видимая деградация вместо краша.
-- **Стек:** Next.js 16, React 19, TypeScript, Prisma 7, PostgreSQL, Redis (BullMQ + cache), Meilisearch, Sentry, NextAuth v5.
-- **Инфра:** self-hosted VPS, systemd + nginx, кастомный deploy pipeline (`tar | ssh | build-on-server`).
+Ядро — это движок подбора. Лежит 17 000+ полиномиальных кривых вентиляторов в Postgres, и под каждый запрос я решаю `P_fan(Q) = P_target` бисекцией, отдаю ранжированный список с КПД в рабочей точке. На p95 укладываюсь в ~60 мс. До этого инженеры подбирали по бумажным графикам, и это занимало минуты.
 
-### Goal-Energo — HVAC project engineer · 2018 — 2024
-Шесть лет проектирования систем вентиляции, дымоудаления, приточных установок для промышленных и коммерческих зданий. Внутренние Excel/скрипты для подбора, выросшие в инженерные движки Wentmarket.
+Кроме этого, в проекте лежит обвязка вокруг ядра. Сервер написан на Next.js 16 с Prisma 7, очереди — на BullMQ, кеш — Redis. К платежам я подключил Yookassa с детерминированными идемпотентными ключами и 54-ФЗ-чеками, к доставке — CDEK (там 800 строк сервиса с OAuth-рефрешем и retry'ями), к мессенджеру — Telegram-бот с авторизацией через HMAC. Поиск работает через Meilisearch с graceful fallback на Postgres LIKE, чтобы при падении индексера сайт не ложился. Бизнес общается с 1С через CommerceML-XML, цены и остатки обновляются по расписанию.
 
-- Полиномиальный фит кривых вентиляторов из лабораторных замеров → каталог коэффициентов, который сегодня лежит в основе Wentmarket.
-- Методология подбора, принятая командой.
-- Customer-facing: сбор требований по рабочей точке, формирование спецификаций и тендерных пакетов.
+Деплоится всё на самохостящемся VPS — systemd, nginx, кастомный pipeline `tar | ssh | build-on-server` (Turbopack кросс-платформенно ломается, поэтому собирается на проде).
+
+### Goal-Energo · HVAC project engineer · 2018 — 2024
+
+Шесть лет — расчёты и проектирование вентиляции, дымоудаления, приточных установок. Считал воздуховоды, акустику, подбирал оборудование, формировал спецификации. Параллельно писал внутренние Excel-таблицы и Python-скрипты для подбора — те самые, из которых потом вырос движок Wentmarket. Полиномиальный фит лабораторных замеров делал руками за пару недель до того, как догадался автоматизировать.
 
 ---
 
-## Side-проекты — связанные через единый pipeline
+### Side-проекты
 
-### `fan-selector-api` — Go-микросервис
-[github.com/goncharovart/fan-selector-api](https://github.com/goncharovart/fan-selector-api)
+**fan-selector-api** ([репо](https://github.com/goncharovart/fan-selector-api)) — тот же движок подбора, но вытащенный в отдельный Go-сервис. Делал, чтобы наработать Go-руку перед собеседованиями и заодно проверить, как у меня устроится spec-first процесс с Claude Code на новом стеке.
 
-Standalone Go-сервис, в который вынесен движок подбора из Wentmarket. Spec-first (BMad-style).
-**Цель:** показать Go + cloud-deploy + SDD-workflow на домене, который я знаю наизусть.
+Внутри: Go 1.25, chi-роутер, pgx, go-redis, OpenTelemetry. Под бенчмарком Horner-эвалюация занимает 0.65 нс, бисекция — 53 нс, полный проход по 50 кандидатам — 3.7 мкс. У бюджета p95 100 мс получается 99 мс запаса. Юнит-тесты, integration через testcontainers с реальным Postgres, GitHub Actions с пятью job'ами. Образ — distroless, миграции в нём же бинарём. Конфиги под Cloud Run и Fly.io лежат в репо, продакшн пока не разворачивал — упёрся в реактивацию билинга и решил, что для собеседования достаточно ready-to-deploy.
 
-- **Go 1.25**, chi router, pgx/v5, go-redis/v9, OpenTelemetry, slog.
-- **PostgreSQL 16** с GiST range-индексом на envelope; prefilter сжимает каталог до кандидатов за один indexed scan.
-- **Bisection root finder** для `P_fan(Q) = P_target` с защитой от NaN/Inf, проверкой смены знака, обработкой границ. Бенчмарки: Horner eval 0.65 нс, bisection 53 нс, полный Evaluate на 50 кандидатах 3.7 мкс — у бюджета p95 100 мс остаётся 99 мс запаса.
-- **Redis cache** с детерминированными SHA-256 ключами, ±10% jitter на TTL против стампида, graceful деградация на NopCache при отказе Redis.
-- **Distroless multi-stage Docker**, non-root пользователь.
-- **OpenTelemetry** с ручными spans вокруг `cache.get`/`cache.set`, `storage.candidates`, `match.evaluate`; атрибуты cache hit, candidate counts, value bytes, TTL.
-- **Integration-тесты** через testcontainers-go: каждый CI-прогон поднимает реальный Postgres 16, применяет embedded-миграции, проверяет GiST prefilter.
-- **Два готовых deploy-пути в репо** — `cloudbuild.yaml` для GCP Cloud Run (Artifact Registry + Cloud SQL + Secret Manager) и `fly.toml` для Fly.io.
-- **GitHub Actions CI:** `go vet`, `go test -race`, golangci-lint v2, integration job, benchmark job, docker build.
-- **SDD-артефакты:** PRD, architecture, per-story acceptance criteria ([specs/](https://github.com/goncharovart/fan-selector-api/tree/main/specs)) пишутся **до** кода. Каждая story закрывается отдельным self-contained PR.
+В specs/ — PRD, архитектура и пять stories с acceptance criteria. Каждый PR закрывает одну story. Это не показуха, это так удобнее с AI-агентом — он лучше работает, когда видит конкретный контракт.
 
-Локально: `docker compose up -d && go run ./cmd/server`.
-
-### `fan-curve-fitter` — Python CLI
-[github.com/goncharovart/fan-curve-fitter](https://github.com/goncharovart/fan-curve-fitter)
-
-Питоновский CLI, который читает CSV-замеры вентилятора, фитит полиномы через `numpy.polyfit` и отдаёт JSON в формате, который `fan-selector-api` ест без преобразования. **End-to-end pipeline:** лабораторные данные → Python → JSON → Go-сервис.
-
-- Python 3.11 / 3.12 / 3.13 (matrix-CI), Typer + Rich UI, pydantic v2, numpy.
-- 24 теста, 90% coverage, ruff + mypy strict зелёные.
-- Horner-эвалюация полинома **синхронизирована** с Go-реализацией — output и input численно идентичны.
+**fan-curve-fitter** ([репо](https://github.com/goncharovart/fan-curve-fitter)) — Python CLI на Typer и numpy, который фитит полиномы из CSV-замеров и отдаёт JSON в том же формате, который ест fan-selector-api. Получился маленький pipeline: CSV → Python → JSON → Go. Horner-эвалюация в Python и Go реализована одинаково, чтобы output не расходился численно. 24 теста, ruff + mypy strict зелёные, CI на Python 3.11–3.13.
 
 ---
 
-## Навыки
+### Стек
 
-**Backend.** TypeScript/Node, Go (наращиваю), PostgreSQL, Redis, BullMQ, REST, OpenAPI, OpenTelemetry, structured logging, идемпотентность, наблюдаемость.
+Сейчас в работе: TypeScript / Node, Next.js, React, Prisma, PostgreSQL, Redis, BullMQ. Из инфраструктуры — Docker, GitHub Actions, Linux/systemd, nginx, OpenTelemetry, Sentry.
 
-**Cloud / DevOps.** Docker (multi-stage, distroless); GitHub Actions CI/CD; Linux/systemd; nginx; кастомные bash deploy-пайплайны (`tar | ssh | build-on-server`). Deploy-конфиги под GCP Cloud Run (Cloud Build / Cloud SQL / Secret Manager) и Fly.io — на уровне ready-to-apply, продакшн-операции пока не вёл.
+Go — наращиваю. Понимаю concurrency, transactions, очереди — это всё было в TS, синтаксис привыкаю. Cloud-практики читал, конфиги пишу, гипер-операционного опыта на GKE пока нет.
 
-**AI-assisted workflow.** Spec-driven development (BMad-Method, кастомные spec-шаблоны), Claude Code как primary IDE-компаньон, параллелизация задач через subagents, автоматические test-loops, prompt-based hooks как guardrails.
+Python — давний рабочий инструмент для расчётов и парсинга, плюс свежий pet на Typer/numpy/pydantic. Mypy strict.
 
-**Frontend.** Next.js, React, TypeScript, Tailwind, Framer Motion, Prisma.
+AI-assisted workflow — Claude Code как основной режим работы. Spec-driven (BMad), параллельные subagents под независимые задачи, prompt-based hooks как guard'ы. Это не «иногда подключаю Cursor», это как я строю проекты.
 
-**Python.** Typer/Click, numpy, pydantic v2, pytest, ruff, mypy strict.
+### Образование
 
-**Domain.** Подбор HVAC-систем, расчёт вентилятор / воздуховод / шумоглушитель / LCC, формирование спецификаций, интеграция 1С, логистика CDEK, фискалка Yookassa / 54-ФЗ.
+ДГТУ, инженер ТГВ, 2013–2018.
 
----
+### Языки
 
-## Образование
-
-**ДГТУ (Донской государственный технический университет)** — инженер, специальность «Теплогазоснабжение и вентиляция». 2013 — 2018.
-
----
-
-## Языки
-
-Русский — родной · Английский — B2 (техническое чтение/письмо свободно; устный — улучшается под нагрузкой).
-
----
-
-## Заметки для рекрутера
-
-- **Go-опыт — недавний.** Сильно владею TypeScript backend, прямо сейчас довожу до production реальный Go-сервис (см. `fan-selector-api`). Честно про ramp; не делаю вид, что ramp'а нет.
-- **AI-assisted shipping — baseline, не эксперимент.** Wentmarket отгружен в продакшн с Claude Code на каждом шаге: PRD, architecture, per-feature stories, код, тесты, деплой. Могу детально обсудить любой коммит.
-- **Открыт к релокации** в Польшу / Грузию / Беларусь / другое.
-- Готов начать сразу.
+Русский родной, английский B2 — читаю и пишу свободно, говорю — без проблем по работе, под давлением быстрее, чем в спокойной речи.
