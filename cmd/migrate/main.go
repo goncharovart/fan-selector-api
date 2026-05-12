@@ -16,7 +16,6 @@ import (
 	"context"
 	"fmt"
 	"io/fs"
-	"log"
 	"os"
 	"sort"
 	"strings"
@@ -30,14 +29,21 @@ import (
 var migrationsFS = migrations.FS
 
 func main() {
+	if err := run(); err != nil {
+		_, _ = os.Stderr.WriteString("migrate: " + err.Error() + "\n")
+		os.Exit(1)
+	}
+}
+
+func run() error {
 	if len(os.Args) < 2 {
-		log.Fatal("migrate: usage — migrate up | migrate version")
+		return fmt.Errorf("usage — migrate up | migrate version")
 	}
 	cmd := os.Args[1]
 
 	dsn := os.Getenv("DATABASE_URL")
 	if dsn == "" {
-		log.Fatal("migrate: DATABASE_URL is required")
+		return fmt.Errorf("DATABASE_URL is required")
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
@@ -45,23 +51,23 @@ func main() {
 
 	conn, err := pgx.Connect(ctx, dsn)
 	if err != nil {
-		log.Fatalf("migrate: connect: %v", err)
+		return fmt.Errorf("connect: %w", err)
 	}
 	defer conn.Close(ctx)
 
 	if err := ensureMigrationsTable(ctx, conn); err != nil {
-		log.Fatalf("migrate: ensure table: %v", err)
+		return fmt.Errorf("ensure table: %w", err)
 	}
 
 	switch cmd {
 	case "up":
 		if err := up(ctx, conn); err != nil {
-			log.Fatalf("migrate: up: %v", err)
+			return fmt.Errorf("up: %w", err)
 		}
 	case "version":
 		ver, err := head(ctx, conn)
 		if err != nil {
-			log.Fatalf("migrate: version: %v", err)
+			return fmt.Errorf("version: %w", err)
 		}
 		if ver == "" {
 			fmt.Println("no migrations applied")
@@ -69,8 +75,9 @@ func main() {
 			fmt.Println(ver)
 		}
 	default:
-		log.Fatalf("migrate: unknown command %q", cmd)
+		return fmt.Errorf("unknown command %q", cmd)
 	}
+	return nil
 }
 
 func ensureMigrationsTable(ctx context.Context, conn *pgx.Conn) error {

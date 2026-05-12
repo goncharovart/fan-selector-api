@@ -9,7 +9,6 @@ package main
 import (
 	"context"
 	"fmt"
-	"log"
 	"os"
 
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -58,21 +57,28 @@ var fans = []sampleFan{
 }
 
 func main() {
+	if err := run(); err != nil {
+		_, _ = os.Stderr.WriteString("seed: " + err.Error() + "\n")
+		os.Exit(1)
+	}
+}
+
+func run() error {
 	dsn := os.Getenv("DATABASE_URL")
 	if dsn == "" {
-		log.Fatal("seed: DATABASE_URL is required")
+		return fmt.Errorf("DATABASE_URL is required")
 	}
 
 	ctx := context.Background()
 	pool, err := pgxpool.New(ctx, dsn)
 	if err != nil {
-		log.Fatalf("seed: pool: %v", err)
+		return fmt.Errorf("pool: %w", err)
 	}
 	defer pool.Close()
 
 	tx, err := pool.Begin(ctx)
 	if err != nil {
-		log.Fatalf("seed: begin: %v", err)
+		return fmt.Errorf("begin: %w", err)
 	}
 	defer tx.Rollback(ctx) //nolint:errcheck
 
@@ -87,7 +93,7 @@ func main() {
 				rpm          = EXCLUDED.rpm,
 				impeller_d_mm = EXCLUDED.impeller_d_mm
 		`, f.ID, f.Manufacturer, f.Series, f.Size, f.Rpm, f.ImpellerD); err != nil {
-			log.Fatalf("seed: upsert model %s: %v", f.ID, err)
+			return fmt.Errorf("upsert model %s: %w", f.ID, err)
 		}
 		if _, err := tx.Exec(ctx, `
 			INSERT INTO fan_curves (fan_id, q_min_m3h, q_max_m3h, p_coeffs, n_coeffs)
@@ -98,12 +104,13 @@ func main() {
 				p_coeffs  = EXCLUDED.p_coeffs,
 				n_coeffs  = EXCLUDED.n_coeffs
 		`, f.ID, f.QMin, f.QMax, f.PCoeffs, f.NCoeffs); err != nil {
-			log.Fatalf("seed: upsert curve %s: %v", f.ID, err)
+			return fmt.Errorf("upsert curve %s: %w", f.ID, err)
 		}
 	}
 
 	if err := tx.Commit(ctx); err != nil {
-		log.Fatalf("seed: commit: %v", err)
+		return fmt.Errorf("commit: %w", err)
 	}
 	fmt.Printf("seeded %d fans\n", len(fans))
+	return nil
 }
